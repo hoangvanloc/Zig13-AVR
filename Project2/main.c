@@ -29,13 +29,12 @@
 #define ALLOW_SCREW            clr_bit(SCREW_CONTROL_PORT,SCREW_CONTROL_PIN)
 #define DISABLE_SCREW          set_bit(SCREW_CONTROL_PORT,SCREW_CONTROL_PIN)
 //#define SCREW_FREE             bit_is_set(SCREW_DONE_PORT_IN,SCREW_DONE_PIN)
-//#define SCREW_RUN              bit_is_clear(SCREW_DONE_PORT_IN,SCREW_DONE_PIN)
-#define SCREW_OK               bit_is_clear(SCREW_OK_PORT_IN,SCREW_OK_PIN)
-#define SCREW_RUN              bit_is_set(SCREW_OK_PORT_IN,SCREW_OK_PIN)
-#define SCREW_COM              bit_is_set(SCREW_NOT_COMPLETE_PORT_IN,SCREW_NOT_COMPLETE_PIN)
-#define SCREW_ERROR            bit_is_clear(SCREW_ERROR_PORT_IN,SCREW_ERROR_PIN)
+//#define SCREW_RUN              bit_is_set(SCREW_OK_PORT_IN,SCREW_OK_PIN)
+#define SCREW_OK               bit_is_set(SCREW_OK_PORT_IN,SCREW_OK_PIN)
+#define SCREW_NOT_COM          bit_is_clear(SCREW_NOT_COMPLETE_PORT_IN,SCREW_NOT_COMPLETE_PIN)
+#define SCREW_ERROR            bit_is_set(SCREW_ERROR_PORT_IN,SCREW_ERROR_PIN)
 #define NEXT_LED               bit_is_clear(BUTTON_NEXT_PORT_IN,BUTTON_NEXT_PIN)
-volatile uint8_t EEMEM train_data_eeprom[SENSOR_NUMBER] = {13,12,11,10,9,8,7,6,5,4,3,2,1};  
+volatile uint8_t EEMEM train_data_eeprom[SENSOR_NUMBER] = {9,2,11,13,7,4,10,1,8,3,12,6,5};  
  uint8_t  temp_data[SENSOR_NUMBER]; 	
  uint8_t train_data[SENSOR_NUMBER];
  uint8_t sensor_data[SENSOR_NUMBER];
@@ -151,8 +150,8 @@ void Program_Start(void)
 int main(void)
 {
 	DDRA &=~ (1<<NAP_OPEN_PIN);
-	PORTA |= (1<<NAP_OPEN_PIN);
-	DDRC &=~(1<<PRESSURE_ERROR_PIN);
+	//PORTA |= (1<<NAP_OPEN_PIN);
+	DDRC &=~(1<<PRESSURE_ERROR_PIN);  //PINC3 I34
 	DDRC &=~ (1<<BUTTON_NEXT_PIN);	
 	//DDRL &=~ (1<<SCREW_DONE_PIN);
 	DDRL &=~ (1<<SCREW_OK_PIN);
@@ -160,8 +159,9 @@ int main(void)
 	DDRL &=~ (1<<SCREW_ERROR_PIN);
 	DDRD |= (1<<VALVE_PIN);
 	DDRD &=~ (1<<XI_LANH_PIN);
-	DDRL |= (1<<SPEAKER_PIN); //Chân Loa		
-	DDRB |= (1<<SCREW_CONTROL_PIN);
+	//DDRG |= (1<<SPEAKER_PIN);	    //Speaker	I41 PG0
+	DDRL |= (1<<SPEAKER_PIN);       //Speaker	O44 PL5
+	DDRB |= (1<<SCREW_CONTROL_PIN); 
     Led_Init();
 	
     SPEAKER_OFF;
@@ -170,7 +170,7 @@ int main(void)
 	Turn_All_LED_Off(RED);
 	Turn_All_LED_Off(GREEN);
 	check_pressure();
-	if (Entry_Trainning())
+	/*if (Entry_Trainning())
 	{
 		Turn_All_LED_On(RED);
 		_delay_ms(2000);
@@ -180,16 +180,16 @@ int main(void)
 			Turn_All_Led_On_Delay(sensor_data,RED);
 			Trainning_Update_Data(sensor_data); //Save data to EPPROM
 		}
-	}
+	}*/
 	Trainning_Data_Read(train_data);  //Read data from EPPROM
 	Turn_All_LED_Off(RED);
 	Turn_All_LED_Off(GREEN);
 	check_pressure();
 	while (1)
 	{
-	   if(SCREW_ERROR)	SPEAKER_ON;
 	   check_pressure();
 	   Start();
+	  
 	}
 }
 
@@ -224,24 +224,44 @@ void Run_Normal(void)
 			SPEAKER_OFF;
 			ALLOW_SCREW;
 		}
-		//Check Screw run and check data
-		//while(!SCREW_RUN){}
-		if(SCREW_RUN && (data == train_data[step]))
+		if(SCREW_OK && (data == train_data[step]))
 		{
 			ALLOW_SCREW;
 			if(SCREW_ERROR)	SPEAKER_ON;
 			else SPEAKER_OFF;
 			//wait until screw is RUN
-			while(SCREW_RUN)
+			while(SCREW_OK)
 			{
 				if(SCREW_ERROR)	SPEAKER_ON;
 			}
 			//Check RUN Done
-			while(1) //while screw is running or screw not complete joint-> check trap
+			uint8_t count = 0;
+			while(count < 5) //while screw is running or screw not complete joint-> check trap
 			{
 				check_pressure();
 				if(SCREW_ERROR)	SPEAKER_ON;  //Turn on speaker
-				if(SCREW_OK && SCREW_COM) break;
+				//Not_ok = not complete
+					if (SCREW_OK && !SCREW_ERROR) 
+					{
+						count++;
+						_delay_ms(10);
+					}
+                     
+					if (SCREW_OK && SCREW_ERROR) 
+					{
+						count = 0;
+						_delay_ms(30);
+					}
+					if (!SCREW_OK && !SCREW_ERROR) 
+					{
+						count = 0;
+						_delay_ms(30);
+					}
+					if (!SCREW_OK && SCREW_ERROR) 
+					{
+						count = 0;
+						_delay_ms(30);
+					}
 			}
 			if(Read_Current_Sensor() == train_data[step])
 			{
