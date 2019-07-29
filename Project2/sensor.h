@@ -32,5 +32,5 @@
 #define SENSOR12_PORT_IN PINH
 #define SENSOR13_PORT_IN PINH
 uint8_t count = 0;
-uint8_t Read_Sensor(uint8_t data_out[13]);
+uint8_t Read_Sensor(uint8_t *data_out);
 #endif

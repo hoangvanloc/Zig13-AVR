@@ -12,18 +12,19 @@
 //#define SCREW_DONE_PORT_IN     PINL
 #define SCREW_OK_PIN           PINL1 //I48 OK
 #define SCREW_OK_PORT_IN       PINL
-#define SCREW_NOT_COMPLETE_PORT_IN PINC //I30
-#define SCREW_NOT_COMPLETE_PIN     PINC7
-#define SCREW_ERROR_PIN        PINL0 //I49 ->7
-#define SCREW_ERROR_PORT_IN    PINL
+#define SCREW_NOT_COMPLETE_PIN     PINL0
+#define SCREW_NOT_COMPLETE_PORT_IN PINL //I49
+#define SCREW_ERROR_PIN        PINC0 //I37
+#define SCREW_ERROR_PORT_IN    PINC
+#define SCREW_CONTROL_PIN      PL4   //O45
+#define SCREW_CONTROL_PORT     PORTL
 //#define SPEAKER_PIN            PG0   //I41
 //#define SPEAKER_PORT_OUT       PORTG
-#define SPEAKER_PIN            PL5   //I41
+#define SPEAKER_PIN            PL5   //O44
 #define SPEAKER_PORT_OUT       PORTL
 #define PRESSURE_ERROR_PIN     PINC3 //I34
 #define PRESSURE_ERROR_PORT_IN PINC
-#define SCREW_CONTROL_PIN      PB7   //O13 ->4
-#define SCREW_CONTROL_PORT     PORTB
+
 #define RESET_PIN              PINJ1
 #define RESET_PORT_IN          PINJ
 #define BUTTON_NEXT_PIN        PINC5  //I32
